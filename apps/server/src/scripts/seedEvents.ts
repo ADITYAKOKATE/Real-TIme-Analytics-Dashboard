@@ -1,12 +1,12 @@
 /**
- * Seed script: generates realistic fake analytics events into Kafka
+ * Seed script: generates realistic fake analytics events to the HTTP API
  * Run: npm run seed --workspace=apps/server
  */
 import 'dotenv/config';
-import { initKafka } from '../kafka/kafkaClient';
-import { publishEvent } from '../kafka/producer';
 import { AnalyticsEvent, EventType } from '@analytics/shared';
 import { v4 as uuidv4 } from 'uuid';
+
+const API_URL = process.env.API_URL || 'http://localhost:4000/api/events/batch';
 
 const USERS = Array.from({ length: 50 }, () => uuidv4());
 const PAGES = ['/home', '/pricing', '/docs', '/blog', '/dashboard', '/signup', '/login'];
@@ -22,14 +22,16 @@ function randomBetween(min: number, max: number): number {
 }
 
 async function seedEvents() {
-  await initKafka();
-  console.log('🌱 Starting event seeding...');
+  console.log(`🌱 Starting event seeding to ${API_URL}...`);
 
   const totalEvents = 500;
+  const batchSize = 50;
   let count = 0;
 
   const eventTypes: EventType[] = ['page_view', 'click', 'conversion', 'api_call', 'error'];
-  const weights = [0.45, 0.25, 0.10, 0.15, 0.05]; // weighted distribution
+  const weights = [0.45, 0.25, 0.10, 0.15, 0.05];
+
+  const events: Partial<AnalyticsEvent>[] = [];
 
   for (let i = 0; i < totalEvents; i++) {
     const rand = Math.random();
@@ -43,43 +45,44 @@ async function seedEvents() {
     const userId = randomItem(USERS);
     const timestamp = new Date(Date.now() - randomBetween(0, 3600_000)).toISOString();
 
-    let event: AnalyticsEvent;
+    let event: any;
 
     switch (eventType) {
       case 'page_view':
-        event = {
-          eventId: uuidv4(), eventType, userId, sessionId: uuidv4(), timestamp,
-          metadata: { url: randomItem(PAGES), referrer: randomItem(PAGES), title: 'Analytics Dashboard', userAgent: randomItem(DEVICES) }
-        }; break;
+        event = { eventType, userId, sessionId: uuidv4(), timestamp, metadata: { url: randomItem(PAGES), referrer: randomItem(PAGES), title: 'Analytics Dashboard', userAgent: randomItem(DEVICES) } }; break;
       case 'click':
-        event = {
-          eventId: uuidv4(), eventType, userId, sessionId: uuidv4(), timestamp,
-          metadata: { elementId: `btn-${randomBetween(1, 10)}`, elementType: 'button', url: randomItem(PAGES), userAgent: randomItem(DEVICES) }
-        }; break;
+        event = { eventType, userId, sessionId: uuidv4(), timestamp, metadata: { elementId: `btn-${randomBetween(1, 10)}`, elementType: 'button', url: randomItem(PAGES), userAgent: randomItem(DEVICES) } }; break;
       case 'conversion':
-        event = {
-          eventId: uuidv4(), eventType, userId, sessionId: uuidv4(), timestamp,
-          metadata: { conversionType: randomItem(['signup', 'purchase', 'subscription']), value: randomBetween(10, 500), currency: 'USD', url: randomItem(PAGES) }
-        }; break;
+        event = { eventType, userId, sessionId: uuidv4(), timestamp, metadata: { conversionType: randomItem(['signup', 'purchase', 'subscription']), value: randomBetween(10, 500), currency: 'USD', url: randomItem(PAGES) } }; break;
       case 'api_call':
-        event = {
-          eventId: uuidv4(), eventType, userId, sessionId: uuidv4(), timestamp,
-          metadata: { method: randomItem(['GET', 'POST', 'PUT', 'DELETE']), endpoint: randomItem(ENDPOINTS), statusCode: randomItem([200, 200, 200, 201, 400, 404, 500]), durationMs: randomBetween(5, 2000) }
-        }; break;
+        event = { eventType, userId, sessionId: uuidv4(), timestamp, metadata: { method: randomItem(['GET', 'POST', 'PUT', 'DELETE']), endpoint: randomItem(ENDPOINTS), statusCode: randomItem([200, 200, 200, 201, 400, 404, 500]), durationMs: randomBetween(5, 2000) } }; break;
       case 'error':
-        event = {
-          eventId: uuidv4(), eventType, userId, sessionId: uuidv4(), timestamp,
-          metadata: { errorCode: randomItem(['E001', 'E002', 'E500']), errorMessage: randomItem(['Network error', 'Timeout', 'Unknown error']), url: randomItem(PAGES) }
-        }; break;
+        event = { eventType, userId, sessionId: uuidv4(), timestamp, metadata: { errorCode: randomItem(['E001', 'E002', 'E500']), errorMessage: randomItem(['Network error', 'Timeout', 'Unknown error']), url: randomItem(PAGES) } }; break;
     }
-
-    await publishEvent(event!);
-    count++;
-    if (count % 50 === 0) console.log(`  ✅ ${count}/${totalEvents} events published`);
-    await new Promise((r) => setTimeout(r, 20)); // slight delay
+    
+    events.push(event);
   }
 
-  console.log(`🎉 Done! ${count} events published to Kafka.`);
+  for (let i = 0; i < events.length; i += batchSize) {
+    const batch = events.slice(i, i + batchSize);
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: batch })
+      });
+      if (res.ok) {
+        count += batch.length;
+        console.log(`  ✅ ${count}/${totalEvents} events sent`);
+      } else {
+        console.error(`  ❌ Failed to send batch:`, await res.text());
+      }
+    } catch (err) {
+      console.error(`  ❌ Failed to send batch:`, err);
+    }
+  }
+
+  console.log(`🎉 Done! ${count} events sent directly to the API.`);
   process.exit(0);
 }
 

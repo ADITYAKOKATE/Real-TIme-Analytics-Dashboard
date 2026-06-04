@@ -1,42 +1,6 @@
 version: '3.8'
 
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: analytics-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: analytics-kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: analytics-kafka-ui
-    depends_on:
-      - kafka
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
 
   mongodb:
     image: mongo:7.0
@@ -71,14 +35,10 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://premachawada1_db_user:BeOHRAlunlIdkSm5@ac-ere1lvi-shard-00-00.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-01.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-02.jaxr3tw.mongodb.net:27017/ecommerce?ssl=true&authSource=admin&retryWrites=true&w=majority
       - REDIS_URL=redis://redis:6379
-      - KAFKA_BROKERS=kafka:29092
-      - KAFKA_CLIENT_ID=analytics-server
-      - KAFKA_GROUP_ID=analytics-consumer-group
       - CLIENT_URL=http://localhost:3000
     depends_on:
       - mongodb
       - redis
-      - kafka
 
   analytics-client:
     build:

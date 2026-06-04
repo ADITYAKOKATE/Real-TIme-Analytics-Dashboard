@@ -5,8 +5,8 @@ import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { connectMongoDB } from './config/database';
 import { connectRedis } from './config/redis';
-import { initKafka } from './kafka/kafkaClient';
-import { startKafkaConsumer } from './kafka/consumer';
+import { startWindowFlusher } from './kafka/aggregator';
+import { MetricModel } from './models/Metric';
 import { setupSocketIO } from './socket/socketManager';
 import { startAlertWorker } from './workers/alertWorker';
 import { metricsRouter } from './routes/metrics';
@@ -45,8 +45,23 @@ async function bootstrap() {
   try {
     await connectMongoDB();
     await connectRedis();
-    await initKafka();
-    await startKafkaConsumer();
+    
+    // Start the 1-minute aggregation flusher (synchronous processing)
+    startWindowFlusher(async (agg) => {
+      try {
+        await MetricModel.create({
+          timestamp: agg.timestamp,
+          metadata: { eventType: agg.eventType },
+          count: agg.count,
+          uniqueUsers: agg.uniqueUsers,
+          totalValue: agg.totalValue,
+          avgDuration: agg.avgDuration,
+        });
+      } catch (err) {
+        console.error('Failed to write aggregated metric to MongoDB:', err);
+      }
+    });
+
     setupSocketIO(io);
     startAlertWorker(io);
 

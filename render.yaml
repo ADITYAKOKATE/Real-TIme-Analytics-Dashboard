@@ -14,11 +14,7 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false
-      - key: KAFKA_BROKERS
+      - key: API_KEY
         sync: false
-      - key: KAFKA_CLIENT_ID
-        value: analytics-server
-      - key: KAFKA_GROUP_ID
-        value: analytics-consumer-group
       - key: CLIENT_URL
         sync: false
