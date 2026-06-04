@@ -1,5 +1,4 @@
 import { Server as SocketServer, Socket } from 'socket.io';
-import { getRedisClient } from '../config/redis';
 import { AnalyticsEvent, MetricUpdate, AlertTriggered } from '@analytics/shared';
 
 let io: SocketServer;
@@ -71,45 +70,48 @@ export function emitAlert(alert: AlertTriggered): void {
   io.emit('alert:triggered', alert);
 }
 
-async function bufferEvent(event: AnalyticsEvent): Promise<void> {
-  try {
-    const redis = getRedisClient();
-    const key = `event_buffer:${event.eventType}`;
-    const entry = JSON.stringify({ ...event, bufferedAt: Date.now() });
+// In-memory buffer replacing Redis
+const eventBuffer = new Map<string, (AnalyticsEvent & { bufferedAt: number })[]>();
 
-    await redis.lpush(key, entry);
-    await redis.ltrim(key, 0, 299); // Keep last 300 events per type
-    await redis.expire(key, 60); // 60 second expiry
-  } catch (err) {
-    console.error('Redis buffer error:', err);
+async function bufferEvent(event: AnalyticsEvent): Promise<void> {
+  const key = event.eventType;
+  const entry = { ...event, bufferedAt: Date.now() };
+
+  if (!eventBuffer.has(key)) {
+    eventBuffer.set(key, []);
+  }
+
+  const list = eventBuffer.get(key)!;
+  list.unshift(entry); // Add to beginning
+
+  // Keep last 300 events
+  if (list.length > 300) {
+    list.pop();
+  }
+
+  // Cleanup old events (older than 60s)
+  const now = Date.now();
+  while (list.length > 0 && now - list[list.length - 1].bufferedAt > 60_000) {
+    list.pop();
   }
 }
 
 async function replayBufferedEvents(socket: Socket): Promise<void> {
-  try {
-    const redis = getRedisClient();
-    const eventTypes = ['page_view', 'click', 'conversion', 'api_call', 'error'];
-    const buffered: AnalyticsEvent[] = [];
+  const buffered: AnalyticsEvent[] = [];
+  const now = Date.now();
 
-    for (const type of eventTypes) {
-      const key = `event_buffer:${type}`;
-      const events = await redis.lrange(key, 0, -1);
-      events.forEach((e) => {
-        try {
-          buffered.push(JSON.parse(e));
-        } catch {}
-      });
-    }
+  eventBuffer.forEach((events, _key) => {
+    // Only replay events within the last 60 seconds
+    const recent = events.filter((e) => now - e.bufferedAt <= 60_000);
+    buffered.push(...recent);
+  });
 
-    if (buffered.length > 0) {
-      socket.emit('replay', {
-        events: buffered.sort(
-          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        ),
-        count: buffered.length,
-      });
-    }
-  } catch (err) {
-    console.error('Redis replay error:', err);
+  if (buffered.length > 0) {
+    socket.emit('replay', {
+      events: buffered.sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      ),
+      count: buffered.length,
+    });
   }
 }

@@ -4,7 +4,6 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { connectMongoDB } from './config/database';
-import { connectRedis } from './config/redis';
 import { startWindowFlusher } from './kafka/aggregator';
 import { MetricModel } from './models/Metric';
 import { setupSocketIO } from './socket/socketManager';
@@ -44,7 +43,6 @@ app.get('/health', (_, res) => {
 async function bootstrap() {
   try {
     await connectMongoDB();
-    await connectRedis();
     
     // Start the 1-minute aggregation flusher (synchronous processing)
     startWindowFlusher(async (agg) => {

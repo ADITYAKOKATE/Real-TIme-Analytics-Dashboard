@@ -14,15 +14,6 @@ services:
     volumes:
       - mongodb_data:/data/db
 
-  redis:
-    image: redis:7.2-alpine
-    container_name: analytics-redis
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-
   analytics-server:
     build:
       context: .
@@ -34,11 +25,9 @@ services:
       - PORT=4000
       - NODE_ENV=production
       - MONGODB_URI=mongodb://premachawada1_db_user:BeOHRAlunlIdkSm5@ac-ere1lvi-shard-00-00.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-01.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-02.jaxr3tw.mongodb.net:27017/ecommerce?ssl=true&authSource=admin&retryWrites=true&w=majority
-      - REDIS_URL=redis://redis:6379
       - CLIENT_URL=http://localhost:3000
     depends_on:
       - mongodb
-      - redis
 
   analytics-client:
     build:
@@ -55,4 +44,3 @@ services:
 
 volumes:
   mongodb_data:
-  redis_data:
