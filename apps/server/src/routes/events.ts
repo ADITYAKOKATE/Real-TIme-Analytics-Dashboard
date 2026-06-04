@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { AnalyticsEvent } from '@analytics/shared';
-import { validateEvent } from '../kafka/schemaValidator';
-import { enrichEvent } from '../kafka/enricher';
-import { accumulateEvent } from '../kafka/aggregator';
+import { validateEvent } from '../processing/schemaValidator';
+import { enrichEvent } from '../processing/enricher';
+import { accumulateEvent } from '../processing/aggregator';
 import { emitMetricUpdate } from '../socket/socketManager';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -4,7 +4,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { connectMongoDB } from './config/database';
-import { startWindowFlusher } from './kafka/aggregator';
+import { startWindowFlusher } from './processing/aggregator';
 import { MetricModel } from './models/Metric';
 import { setupSocketIO } from './socket/socketManager';
 import { startAlertWorker } from './workers/alertWorker';
