@@ -20,10 +20,10 @@ export function Sidebar() {
       <div className="p-5 border-b border-bg-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center shadow-glow-brand">
-            <span className="text-white font-bold text-sm">P</span>
+            <span className="text-white font-bold text-sm">E</span>
           </div>
           <div>
-            <h1 className="font-semibold text-text-primary text-sm">PulseMetrics</h1>
+            <h1 className="font-semibold text-text-primary text-sm">Ecommerce Analytics</h1>
             <p className="text-xs text-text-muted">Analytics Platform</p>
           </div>
         </div>

@@ -69,7 +69,7 @@ services:
     environment:
       - PORT=4000
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://admin:analytics123@mongodb:27017/analytics?authSource=admin
+      - MONGODB_URI=mongodb://premachawada1_db_user:BeOHRAlunlIdkSm5@ac-ere1lvi-shard-00-00.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-01.jaxr3tw.mongodb.net:27017,ac-ere1lvi-shard-00-02.jaxr3tw.mongodb.net:27017/ecommerce?ssl=true&authSource=admin&retryWrites=true&w=majority
       - REDIS_URL=redis://redis:6379
       - KAFKA_BROKERS=kafka:29092
       - KAFKA_CLIENT_ID=analytics-server

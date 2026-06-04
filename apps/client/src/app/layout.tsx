@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'PulseMetrics — Real-Time Analytics Dashboard',
-  description: 'Monitor your application metrics in real-time with Kafka-powered event streaming, beautiful D3.js charts, and configurable intelligent alerts.',
+  title: 'Ecommerce Analytics Dashboard',
+  description: 'Real-time analytics for ecommerce',
   keywords: 'analytics, real-time, dashboard, metrics, kafka, monitoring',
 };
 
