@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-bg text-text-primary font-sans antialiased;
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40V0M40 0v40' stroke='%23252535' stroke-width='0.5' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track { @apply bg-bg; }
+  ::-webkit-scrollbar-thumb { @apply bg-bg-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-text-muted; }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-surface border border-bg-border rounded-xl shadow-card;
+  }
+
+  .card-elevated {
+    @apply bg-bg-elevated border border-bg-border rounded-xl shadow-card;
+  }
+
+  .btn-primary {
+    @apply bg-brand hover:bg-brand-light text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-glow-brand;
+  }
+
+  .btn-ghost {
+    @apply text-text-secondary hover:text-text-primary hover:bg-bg-elevated px-4 py-2 rounded-lg transition-all duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-green { @apply badge bg-accent-green/10 text-accent-green; }
+  .badge-red { @apply badge bg-accent-orange/10 text-accent-orange; }
+  .badge-brand { @apply badge bg-brand/10 text-brand-light; }
+
+  .metric-card {
+    @apply card p-5 flex flex-col gap-3 hover:border-bg-border/80 transition-all duration-300;
+  }
+
+  .chart-container {
+    @apply card p-4 w-full overflow-hidden;
+  }
+
+  .live-dot {
+    @apply w-2 h-2 rounded-full bg-accent-green animate-pulse;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-all duration-200;
+  }
+
+  .nav-link-active {
+    @apply nav-link text-text-primary bg-brand/10 border border-brand/20;
+  }
+}
+
+/* D3 Chart Global Styles */
+.d3-chart {
+  font-family: 'Inter', sans-serif;
+}
+
+.d3-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(26, 26, 38, 0.95);
+  border: 1px solid #252535;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #f0f0f8;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+/* React Grid Layout */
+.react-grid-item.react-grid-placeholder {
+  background: rgba(108, 99, 255, 0.15) !important;
+  border: 2px dashed rgba(108, 99, 255, 0.4) !important;
+  border-radius: 12px !important;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: rgba(108, 99, 255, 0.6) !important;
+}

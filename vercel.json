@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run build:client",
+  "outputDirectory": "apps/client/.next",
+  "framework": "nextjs",
+  "ignoreCommand": "bash -c \"exit 1\""
+}
