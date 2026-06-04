@@ -16,7 +16,7 @@ let kafka: Kafka;
 export async function initKafka(): Promise<void> {
   const brokers = (process.env.KAFKA_BROKERS || 'localhost:9092').split(',');
 
-  kafka = new Kafka({
+  const kafkaConfig: any = {
     clientId: process.env.KAFKA_CLIENT_ID || 'analytics-server',
     brokers,
     logLevel: logLevel.WARN,
@@ -24,7 +24,19 @@ export async function initKafka(): Promise<void> {
       initialRetryTime: 300,
       retries: 8,
     },
-  });
+  };
+
+  // If a username is provided, assume remote secure Kafka (like Upstash)
+  if (process.env.KAFKA_USERNAME && process.env.KAFKA_PASSWORD) {
+    kafkaConfig.ssl = true;
+    kafkaConfig.sasl = {
+      mechanism: process.env.KAFKA_MECHANISM || 'scram-sha-256',
+      username: process.env.KAFKA_USERNAME,
+      password: process.env.KAFKA_PASSWORD,
+    };
+  }
+
+  kafka = new Kafka(kafkaConfig);
 
   // Create topics if not exist
   const admin = kafka.admin();
